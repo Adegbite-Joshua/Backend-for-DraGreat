@@ -7,7 +7,13 @@ require('dotenv').config();
 exports.signup = async (req, res) => {
   console.log(req.body);
   
-  const { email, password, name } = req.body;
+  const { email, password, name, authToken } = req.body;
+  if(authToken != process.env.AUTHORIZATION_TOKEN) {
+    res.status(400).json({
+      msg: 'Invalid token'
+    })
+    return;
+  }
   try {
     let admin = await Admin.findOne({ email });
     if (admin) return res.status(400).json({ msg: 'Admin already exists' });
