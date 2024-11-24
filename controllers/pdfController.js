@@ -38,28 +38,28 @@ exports.searchPdfs = async (req, res) => {
 
 
 exports.uploadPdf = async (req, res) => {
-    const { title, pages, pdfImageBase64 } = req.body;
-  
-    try {
-      const result = await cloudinary.uploader.upload(pdfImageBase64, {
-        resource_type: 'auto',
-        folder: 'documents'
-      });
-      
-     const pdf = new Pdf({
-        title,
-        pages,
-        url: result.secure_url,
-        cloudinaryId: result.public_id,
-        uploadedBy: req.admin.id,
-      });
-      await pdf.save();
-      res.json(pdf);
-    } catch (err) { 
-      console.log(err);
-      res.status(500).json({ msg: 'Error uploading file' });
-    }
-  };
+  const { title, pages, pdfImageBase64 } = req.body;
+
+  try {
+    const result = await cloudinary.uploader.upload(pdfImageBase64, {
+      resource_type: 'auto',
+      folder: 'documents'
+    });
+    
+   const pdf = new Pdf({
+      title,
+      pages,
+      url: result.secure_url,
+      cloudinaryId: result.public_id,
+      uploadedBy: req.admin.id,
+    });
+    await pdf.save();
+    res.json(pdf);
+  } catch (err) { 
+    console.log(err);
+    res.status(500).json({ msg: 'Error uploading file' });
+  }
+};
 
 
 exports.updatePdf = async (req, res) => {

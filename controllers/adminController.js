@@ -8,6 +8,8 @@ exports.signup = async (req, res) => {
   console.log(req.body);
   
   const { email, password, name, authToken } = req.body;
+  console.log({ email, password, name, authToken });
+  
   if(authToken != process.env.AUTHORIZATION_TOKEN) {
     res.status(400).json({
       msg: 'Invalid token'
