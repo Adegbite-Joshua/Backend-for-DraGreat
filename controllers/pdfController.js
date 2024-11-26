@@ -51,6 +51,7 @@ exports.uploadPdf = async (req, res) => {
       {
         resource_type: 'raw', // 'raw' for PDF files
         folder: 'documents',
+        chunk_size: 6000000, // 6MB chunk size
       },
       (error, result) => {
         if (error) throw error;

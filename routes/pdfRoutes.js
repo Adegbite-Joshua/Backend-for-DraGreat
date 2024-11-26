@@ -12,7 +12,7 @@ router.get('/', pdfController.getAllPdfs);
 
 router.get('/search', pdfController.searchPdfs);
 
-router.post('/upload', authenticateAdmin, upload.single('pdf'), pdfController.uploadPdf);
+router.post('/upload', authenticateAdmin, upload.single('file'), pdfController.uploadPdf);
 
 router.put('/update/:id', authenticateAdmin, pdfController.updatePdf);
 
