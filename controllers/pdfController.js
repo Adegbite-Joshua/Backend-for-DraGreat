@@ -7,7 +7,6 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  timeout: 300000,
 });
 
 
@@ -39,48 +38,28 @@ exports.searchPdfs = async (req, res) => {
 
 
 exports.uploadPdf = async (req, res) => {
-  const { title, pages } = req.body;
-
-  if (!req.file) {
-    return res.status(400).json({ msg: 'No file uploaded' });
-  }
+  const { title, pages, file } = req.body;
 
   try {
-    // Upload the file buffer to Cloudinary
-    const result = await cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'raw', // 'raw' for PDF files
-        folder: 'documents',
-        chunk_size: 6000000, // 6MB chunk size
-      },
-      (error, result) => {
-        if (error) throw error;
-
-        // Save to database
-        const pdf = new Pdf({
-          title,
-          pages,
-          url: result.secure_url,
-          cloudinaryId: result.public_id,
-          uploadedBy: req.admin.id,
-        });
-
-        pdf.save();
-        res.json(pdf);
-      }
-    );
-
-    // Pipe the file buffer to the Cloudinary uploader
-    const stream = require('stream');
-    const uploadStream = new stream.PassThrough();
-    uploadStream.end(req.file.buffer);
-    uploadStream.pipe(result);
-  } catch (err) {
+    const result = await cloudinary.uploader.upload(file, {
+      resource_type: 'auto',
+      folder: 'documents'
+    });
+    
+   const pdf = new Pdf({
+      title,
+      pages,
+      url: result.secure_url,
+      cloudinaryId: result.public_id,
+      uploadedBy: req.admin.id,
+    });
+    await pdf.save();
+    res.json(pdf);
+  } catch (err) { 
     console.log(err);
     res.status(500).json({ msg: 'Error uploading file' });
   }
 };
-
 
 
 exports.updatePdf = async (req, res) => {
