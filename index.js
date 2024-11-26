@@ -23,4 +23,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/pdf', pdfRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.timeout = 300000; // 5 minutes
+
