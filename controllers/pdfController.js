@@ -4,6 +4,8 @@ require('dotenv').config();
 const multer = require('multer');
 const streamifier = require('streamifier');
 const { PDFDocument } = require('pdf-lib');
+const pdfParse = require('pdf-parse');
+
 
 
 // Configure Multer
