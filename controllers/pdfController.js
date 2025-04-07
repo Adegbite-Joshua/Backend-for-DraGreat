@@ -4,8 +4,6 @@ require('dotenv').config();
 const multer = require('multer');
 const streamifier = require('streamifier');
 const { PDFDocument } = require('pdf-lib');
-const pdfParse = require('pdf-parse');
-
 
 
 // Configure Multer
@@ -88,18 +86,8 @@ exports.searchPdfs = async (req, res) => {
 //   },
 // ];
 
-async function validatePDF(fileBuffer) {
-  try {
-    await pdfParse(fileBuffer);
-    return true; // PDF is valid
-  } catch (error) {
-    console.error('Invalid PDF:', error.message);
-    return false; // PDF is invalid
-  }
-}
-
 exports.uploadPdf = [
-  upload.single('file'), 
+  upload.single('file'), // Use multer middleware to handle file upload
   async (req, res) => {
     const { title, pages } = req.body;
 
@@ -108,14 +96,10 @@ exports.uploadPdf = [
     }
 
     try {
-      const isValid = await validatePDF(req.file.buffer);
-      if (!isValid) {
-        return res.status(400).json({ msg: 'Uploaded file is not a valid PDF' });
-      }
-
-      const pdfDoc = await PDFDocument.load(req.file.buffer, { ignoreEncryption: true });
+      const pdfDoc = await PDFDocument.load(req.file.buffer);
       const totalPages = pdfDoc.getPageCount();
-      const MAX_FILE_SIZE = 9.5 * 1024 * 1024;
+
+      const MAX_FILE_SIZE = 9.5 * 1024 * 1024; // 9.5 MB
       const urls = [];
       let segmentStart = 0;
 
@@ -131,23 +115,42 @@ exports.uploadPdf = [
           const pdfBytes = await pdfSegment.save();
           currentSize = pdfBytes.length;
 
-          if (currentSize > MAX_FILE_SIZE) break;
+          if (currentSize > MAX_FILE_SIZE) {
+            break;
+          }
 
           segmentEnd++;
         }
 
         const pdfBytes = await pdfSegment.save();
-        const url = await uploadToCloudinary(pdfBytes);
-        urls.push(url);
+        await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              resource_type: 'auto',
+              folder: 'documents',
+            },
+            (error, result) => {
+              if (error) {
+                console.error('Cloudinary Upload Error:', error);
+                reject(error);
+              } else {
+                urls.push(result.secure_url);
+                resolve();
+              }
+            }
+          );
 
-        segmentStart = segmentEnd;
+          // Pipe the segment data to Cloudinary
+          streamifier.createReadStream(pdfBytes).pipe(uploadStream);
+        });
+
+        segmentStart = segmentEnd; // Move to the next set of pages
       }
 
       const pdf = new Pdf({
         title,
         pages: pages ? parseInt(pages, 10) : null,
         urls,
-        uploadedBy: req.admin.id,
       });
 
       await pdf.save();
@@ -158,7 +161,6 @@ exports.uploadPdf = [
     }
   },
 ];
-
 
 
 

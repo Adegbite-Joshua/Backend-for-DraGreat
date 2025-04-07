@@ -9,7 +9,6 @@ const PdfSchema = new mongoose.Schema({
     { type: String }
   ],
   cloudinaryId: { type: String },
-  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Pdf', PdfSchema);
