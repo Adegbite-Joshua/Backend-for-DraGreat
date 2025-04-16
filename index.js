@@ -10,8 +10,22 @@ const app = express();
 connectDB();
 
 // Enable CORS for all routes
+const allowedOrigins = [
+  'https://pdfwebsite.vercel.app',
+  '*' // This will allow all other origins
+];
+
 app.use(cors({
-    origin: '*',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    return callback(new Error('Not allowed by CORS'));
+  }
 }));
 
 app.use(express.json({ limit: '100mb' })); 
